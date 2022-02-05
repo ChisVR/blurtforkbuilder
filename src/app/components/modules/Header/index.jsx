@@ -48,18 +48,7 @@ class Header extends Component {
         };
     }
 
-    componentDidMount() {
-        if (
-            !this.props.gptEnabled ||
-            !process.env.BROWSER ||
-            !window.googletag ||
-            !window.googletag.pubads
-        ) {
-            return null;
-        }
-
-        window.addEventListener('gptadshown', (e) => this.gptAdRendered(e));
-
+    UNSAFE_componentWillMount() {
         const {
             loggedIn,
             current_account_name,
@@ -67,6 +56,22 @@ class Header extends Component {
         } = this.props;
         if (loggedIn) {
             getAccountNotifications(current_account_name);
+        }
+    }
+
+    componentDidMount() {
+        // if (
+        //     !this.props.gptEnabled ||
+        //     !process.env.BROWSER ||
+        //     !window.googletag ||
+        //     !window.googletag.pubads
+        // ) {
+        //     return null;
+        // }
+
+        const { gptEnabled } = this.props;
+        if(gptEnabled) {
+            window.addEventListener('gptadshown', (e) => this.gptAdRendered(e));
         }
     }
 
@@ -428,7 +433,7 @@ class Header extends Component {
                                         </span>
                                     </li>
                                     {unreadNotificationCount > 0 && (
-                                        <div className={'Header__notification'}>
+                                        <div className="Header__notification">
                                             <span>
                                                 {unreadNotificationCount}
                                             </span>
