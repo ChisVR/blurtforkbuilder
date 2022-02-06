@@ -31,6 +31,8 @@ import tt from 'counterpart';
 import 'emoji-mart/css/emoji-mart.css';
 import { Picker, Emoji } from 'emoji-mart';
 
+import { loadUserTemplates, saveUserTemplates } from 'app/utils/UserTemplates';
+
 const MAX_FILE_TO_UPLOAD = 10;
 const imagesToUpload = [];
 
@@ -59,6 +61,7 @@ class ReplyEditor extends Component {
         defaultPayoutType: PropTypes.string,
         payoutType: PropTypes.string,
         summary: PropTypes.string,
+        postTemplateName: PropTypes.string,
     };
 
     static defaultProps = {
@@ -137,6 +140,67 @@ class ReplyEditor extends Component {
             const ns = nextState;
             const tp = this.props;
             const np = nextProps;
+
+            // User Templates
+
+            if (typeof nextProps.postTemplateName !== 'undefined' && nextProps.postTemplateName !== null) {
+                const { formId } = tp;
+
+                if (nextProps.postTemplateName.indexOf('create_') === 0) {
+                    const { username } = tp;
+                    const {
+                        body, title, summary, category
+                    } = ns;
+
+                    const { payoutType, beneficiaries } = np;
+                    const userTemplates = loadUserTemplates(username);
+                    const newTemplateName = nextProps.postTemplateName.replace('create_', '');
+                    const newTemplate = {
+                        name: nextProps.postTemplateName.replace('create_', ''),
+                        beneficiaries,
+                        payoutType,
+                        markdown: body !== undefined ? body.value : '',
+                        title: title !== undefined ? title.value : '',
+                        summary: summary !== undefined ? summary.value : '',
+                        // altAuthor: altAuthor !== undefined ? altAuthor.value : '',
+                        category: category !== undefined ? category.value : '',
+                    };
+
+                    let updated = false;
+                    for (let ui = 0; ui < userTemplates.length; ui += 1) {
+                        if (userTemplates[ui].name === newTemplateName) {
+                            userTemplates[ui] = newTemplate;
+                            updated = true;
+                        }
+                    }
+
+                    if (updated === false) {
+                        userTemplates.push(newTemplate);
+                    }
+
+                    saveUserTemplates(username, userTemplates);
+
+                    this.props.setPostTemplateName(formId, null);
+                } else {
+                    const userTemplates = loadUserTemplates(nextProps.username);
+
+                    for (let ti = 0; ti < userTemplates.length; ti += 1) {
+                        const template = userTemplates[ti];
+                        if (template.name === nextProps.postTemplateName) {
+                            this.state.body.props.onChange(template.markdown);
+                            this.state.title.props.onChange(template.title);
+                            this.state.summary.props.onChange(template.summary);
+                            // this.state.altAuthor.props.onChange(template.altAuthor);
+                            this.state.category.props.onChange(template.category);
+                            this.props.setPayoutType(formId, template.payoutType);
+                            this.props.setBeneficiaries(formId, template.beneficiaries);
+
+                            this.props.setPostTemplateName(formId, null);
+                            break;
+                        }
+                    }
+                }
+            }
 
             // Save curent draft to localStorage
             if (
@@ -481,6 +545,15 @@ class ReplyEditor extends Component {
         const { progress, noClipboardData } = this.state;
         const disabled = submitting || !valid;
         const loading = submitting || this.state.loading;
+
+        // Set default beneficiary
+
+        // console.log('Got benefeciaries', beneficiaries);
+
+        // if(beneficiaries.length > 0) {
+        //     this.props.setBeneficiaries(formId, beneficiaries);
+        //     console.log('set beneficiaries sucess');
+        // }
 
         const errorCallback = (estr) => {
             this.setState({ postError: estr, loading: false });
@@ -1130,6 +1203,15 @@ export default (formId) => connect(
         ]);
         beneficiaries = beneficiaries ? beneficiaries.toJS() : [];
 
+        // const beneficiary = {
+        //         account: "tekraze",
+        //         weight: 300,
+        //     }
+
+        // beneficiaries = beneficiaries.length > 0 ? beneficiaries.push(beneficiary) : [beneficiary];
+
+        const postTemplateName = state.user.getIn(['current', 'post', formId, 'postTemplateName']);
+
         const ret = {
             ...ownProps,
             fields,
@@ -1148,6 +1230,7 @@ export default (formId) => connect(
             richTextEditor,
             beneficiaries,
             tags,
+            postTemplateName,
         };
         return ret;
     },
@@ -1166,6 +1249,12 @@ export default (formId) => connect(
             userActions.set({
                 key: ['current', 'post', formId, 'beneficiaries'],
                 value: fromJS(beneficiaries),
+            })
+        ),
+        setPostTemplateName: (formId, postTemplateName) => dispatch(
+            userActions.set({
+                key: ['current', 'post', formId, 'postTemplateName'],
+                value: postTemplateName,
             })
         ),
         reply: ({
