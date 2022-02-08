@@ -4,7 +4,6 @@
 *.so
 *.pyc
 *.pyo
-
 # Xcode project files
 *.xcodeproj/
 *.build/
@@ -53,4 +52,4 @@ lib
 m3info.md
 
 .eslintcache
-./.eslintcache
+# ./.eslintcache
