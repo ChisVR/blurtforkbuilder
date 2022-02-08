@@ -1,17 +1,12 @@
-/* eslint-disable react/button-has-type */
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/interactive-supports-focus */
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-/* eslint-disable no-restricted-globals */
+/* eslint-disable jsx-a11y/anchor-is-valid */
+/* eslint-disable jsx-a11y/tabindex-no-positive */
 /* eslint-disable react/destructuring-assignment */
 /* eslint-disable react/require-default-props */
 /* eslint-disable react/static-property-placement */
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/anchor-is-valid */
-/* eslint-disable jsx-a11y/tabindex-no-positive */
-/* eslint-disable react/no-string-refs */
-/* eslint-disable no-useless-escape */
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable arrow-parens */
 import React, { Component } from 'react';
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
@@ -36,33 +31,7 @@ import tt from 'counterpart';
 import 'emoji-mart/css/emoji-mart.css';
 import { Picker, Emoji } from 'emoji-mart';
 
-// import dynamic from "next/dynamic";
-
-// import tinymce from 'tinymce/tinymce';
-// import "tinymce";
-
-// import 'tinymce/icons/default';
-// import "tinymce/themes/silver";
-// import 'tinymce/plugins/emoticons';
-// import 'tinymce/plugins/emoticons/js/emojis';
-// import 'tinymce/plugins/table';
-// import 'tinymce/plugins/help';
-// import 'tinymce/plugins/lists';
-// import 'tinymce/plugins/nonbreaking';
-// import 'tinymce/plugins/quickbars';
-// import 'tinymce/plugins/preview';
-// import 'tinymce/plugins/imagetools';
-// import 'tinymce/plugins/codesample';
-// import 'tinymce/plugins/code';
-// import 'tinymce/plugins/hr';
-// import 'tinymce/plugins/anchor';
-// import 'tinymce/plugins/image';
-// import 'tinymce/plugins/link';
-// import 'tinymce/plugins/wordcount';
-// import 'tinymce/skins/ui/oxide/skin.min.css';
-
-// import { Editor } from '@tinymce/tinymce-react';
-// import Prism from "prismjs";
+import { loadUserTemplates, saveUserTemplates } from 'app/utils/UserTemplates';
 
 const MAX_FILE_TO_UPLOAD = 10;
 const imagesToUpload = [];
@@ -72,14 +41,6 @@ const remarkable = new Remarkable({ html: true, breaks: true });
 const RTE_DEFAULT = false;
 
 class ReplyEditor extends Component {
-    static defaultProps = {
-        // eslint-disable-next-line react/default-props-match-prop-types
-        isStory: false,
-        author: '',
-        parent_author: '',
-        parent_permlink: '',
-        type: 'submit_comment',
-    };
 
     static propTypes = {
         // html component attributes
@@ -100,6 +61,16 @@ class ReplyEditor extends Component {
         defaultPayoutType: PropTypes.string,
         payoutType: PropTypes.string,
         summary: PropTypes.string,
+        postTemplateName: PropTypes.string,
+    };
+
+    static defaultProps = {
+        // eslint-disable-next-line react/default-props-match-prop-types
+        isStory: false,
+        author: '',
+        parent_author: '',
+        parent_permlink: '',
+        type: 'submit_comment',
     };
 
     constructor(props) {
@@ -159,35 +130,6 @@ class ReplyEditor extends Component {
                     : null,
             });
         }
-
-        //        add tinymce
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/tinymce/5.10.2/tinymce.min.js';
-        script.type = 'module';
-        script.async = true;
-        document.head.appendChild(script);
-        // if(typeof window !== "undefined") {
-        //     require('tinymce/tinymce');
-        //     require('tinymce/skins/ui/oxide/skin.min.css');
-        //     require('tinymce/icons/default');
-        //     require("tinymce/themes/silver");
-        //     require('tinymce/plugins/emoticons');
-        //     require('tinymce/plugins/emoticons/js/emojis');
-        //     require('tinymce/plugins/table');
-        //     require('tinymce/plugins/help');
-        //     require('tinymce/plugins/lists');
-        //     require('tinymce/plugins/nonbreaking');
-        //     require('tinymce/plugins/quickbars');
-        //     require('tinymce/plugins/preview');
-        //     require('tinymce/plugins/imagetools');
-        //     require('tinymce/plugins/codesample');
-        //     require('tinymce/plugins/code');
-        //     require('tinymce/plugins/hr');
-        //     require('tinymce/plugins/anchor');
-        //     require('tinymce/plugins/image');
-        //     require('tinymce/plugins/link');
-        //     require('tinymce/plugins/wordcount');
-        // }
     }
 
     shouldComponentUpdate = shouldComponentUpdate(this, 'ReplyEditor');
@@ -198,6 +140,67 @@ class ReplyEditor extends Component {
             const ns = nextState;
             const tp = this.props;
             const np = nextProps;
+
+            // User Templates
+
+            if (typeof nextProps.postTemplateName !== 'undefined' && nextProps.postTemplateName !== null) {
+                const { formId } = tp;
+
+                if (nextProps.postTemplateName.indexOf('create_') === 0) {
+                    const { username } = tp;
+                    const {
+                        body, title, summary, category
+                    } = ns;
+
+                    const { payoutType, beneficiaries } = np;
+                    const userTemplates = loadUserTemplates(username);
+                    const newTemplateName = nextProps.postTemplateName.replace('create_', '');
+                    const newTemplate = {
+                        name: nextProps.postTemplateName.replace('create_', ''),
+                        beneficiaries,
+                        payoutType,
+                        markdown: body !== undefined ? body.value : '',
+                        title: title !== undefined ? title.value : '',
+                        summary: summary !== undefined ? summary.value : '',
+                        // altAuthor: altAuthor !== undefined ? altAuthor.value : '',
+                        category: category !== undefined ? category.value : '',
+                    };
+
+                    let updated = false;
+                    for (let ui = 0; ui < userTemplates.length; ui += 1) {
+                        if (userTemplates[ui].name === newTemplateName) {
+                            userTemplates[ui] = newTemplate;
+                            updated = true;
+                        }
+                    }
+
+                    if (updated === false) {
+                        userTemplates.push(newTemplate);
+                    }
+
+                    saveUserTemplates(username, userTemplates);
+
+                    this.props.setPostTemplateName(formId, null);
+                } else {
+                    const userTemplates = loadUserTemplates(nextProps.username);
+
+                    for (let ti = 0; ti < userTemplates.length; ti += 1) {
+                        const template = userTemplates[ti];
+                        if (template.name === nextProps.postTemplateName) {
+                            this.state.body.props.onChange(template.markdown);
+                            this.state.title.props.onChange(template.title);
+                            this.state.summary.props.onChange(template.summary);
+                            // this.state.altAuthor.props.onChange(template.altAuthor);
+                            this.state.category.props.onChange(template.category);
+                            this.props.setPayoutType(formId, template.payoutType);
+                            this.props.setBeneficiaries(formId, template.beneficiaries);
+
+                            this.props.setPostTemplateName(formId, null);
+                            break;
+                        }
+                    }
+                }
+            }
 
             // Save curent draft to localStorage
             if (
@@ -236,29 +239,6 @@ class ReplyEditor extends Component {
         }
     }
 
-    // getSnapshotBeforeUpdate(prevProps, prevState) {
-    //     // Are we adding new items to the list?
-    //     // Capture the scroll position so we can adjust scroll later.
-    //     if (prevProps.list.length < this.props.list.length) {
-    //       return (
-    //         this.listRef.scrollHeight - this.listRef.scrollTop
-    //       );
-    //     }
-    //     return null;
-    //   }
-
-    //   componentDidUpdate(prevProps, prevState, snapshot) {
-    //     // If we have a snapshot value, we've just added new items.
-    //     // Adjust scroll so these new items don't push the old ones out of view.
-    //     // (snapshot here is the value returned from getSnapshotBeforeUpdate)
-    //     if (snapshot !== null) {
-    //       this.listRef.scrollTop =
-    //         this.listRef.scrollHeight - snapshot;
-    //     }
-    //   }
-
-    commentEditorRef = React.createRef();
-
     onCancel = (e) => {
         if (e) e.preventDefault();
         const { formId, onCancel, defaultPayoutType } = this.props;
@@ -281,14 +261,6 @@ class ReplyEditor extends Component {
 
     // As rte_editor is updated, keep the (invisible) 'body' field in sync.
     onChange = (rte_value) => {
-        this.setState({ rte_value });
-        const html = stateToHtml(rte_value);
-        const { body } = this.state;
-        if (body.value !== html) body.props.onChange(html);
-    };
-
-    onChange2 = (rte_value) => {
-        console.log('Rte value', rte_value);
         this.setState({ rte_value });
         const html = stateToHtml(rte_value);
         const { body } = this.state;
@@ -324,21 +296,10 @@ class ReplyEditor extends Component {
         this.uploadNextImage();
     };
 
-    // fileDropzone = React.createRef();
-
-    // onOpenClick = () => {
-    //     console.log('Open click called');
-    //     if(this.fileDropzone.current) {
-    //         console.log('Click works');
-    //         this.fileDropzone.current.open();
-    //     }
-    //     // this.dropzone.open();
-    // };
-
     onPasteCapture = (e) => {
         try {
             if (e.clipboardData) {
-                e.clipboardData.items.forEach(item => {
+                e.clipboardData.items.forEach((item) => {
                     if (item.kind === 'file' && /^image\//.test(item.type)) {
                         const blob = item.getAsFile();
                         imagesToUpload.push({
@@ -470,7 +431,6 @@ class ReplyEditor extends Component {
 
     showDraftSaved() {
         try {
-            // this.refs = React.createRef();
             const { draft } = this.refs;
             draft.className = 'ReplyEditor__draft';
             // eslint-disable-next-line no-void
@@ -585,6 +545,15 @@ class ReplyEditor extends Component {
         const { progress, noClipboardData } = this.state;
         const disabled = submitting || !valid;
         const loading = submitting || this.state.loading;
+
+        // Set default beneficiary
+
+        // console.log('Got benefeciaries', beneficiaries);
+
+        // if(beneficiaries.length > 0) {
+        //     this.props.setBeneficiaries(formId, beneficiaries);
+        //     console.log('set beneficiaries sucess');
+        // }
 
         const errorCallback = (estr) => {
             this.setState({ postError: estr, loading: false });
@@ -875,8 +844,6 @@ class ReplyEditor extends Component {
                                             )
                                         }}
                                     </Dropzone>
-                                    {/* </span> */}
-                                    {/* )} */}
                                     {progress.message && (
                                         <div className="info">
                                             {progress.message}
@@ -891,49 +858,7 @@ class ReplyEditor extends Component {
                                             {progress.error}
                                         </div>
                                     )}
-                                    {/* {!isStory && typeof window !== "undefined" && (
-                                        <Editor
-                                            ref={this.commentEditorRef}
-                                            onBlur={body.onBlur}
-                                            onEditorChange={this.onChange2}
-                                            // onChange={this.onChange2}
-                                            apiKey="vd092f869ur5xpeos999x9befq5jxh5nghgomhiwq83etisx"
-                                            value={this.state.rte_value}
-                                            init={{
-                                                branding: false,
-                                                plugins: "emoticons link code image anchor codesample hr imagetools lists table nonbreaking preview quickbars help wordcount",
-                                                toolbar: "emoticons | formatgroup paragraphgroup insertgroup | code codesample anchor | media nonbreaking preview help wordcount",
-                                                toolbar_location: "bottom",
-                                                imagetools_cors_hosts: ['blurt.live', 'blurtblog.tekraze.com', 'blurtlatam.com', 'blurt.blog'],
-                                                menubar: false,
-                                                toolbar_groups: {
-                                                    formatgroup: {
-                                                        icon: 'format',
-                                                        tooltip: 'Formatting',
-                                                        items: 'bold italic underline strikethrough | forecolor backcolor | superscript subscript | removeformat'
-                                                    },
-                                                    paragraphgroup: {
-                                                        icon: 'paragraph',
-                                                        tooltip: 'Paragraph format',
-                                                        items: 'h1 h2 h3 h4 h5 h6 | bullist numlist | alignleft aligncenter alignright | indent outdent'
-                                                    },
-                                                    insertgroup: {
-                                                        icon: 'plus',
-                                                        tooltip: 'Insert',
-                                                        items: 'link image emoticons hr'
-                                                    }
-                                                },
-                                                media_live_embeds: true,
-                                                media_alt_source: false,
-                                                media_poster: false,
-                                                quickbars_insert_toolbar: 'quicktable image media codesample',
-                                                quickbars_selection_toolbar: 'bold italic underline | h1 h2 h3 | formatselect | bullist numlist | blockquote quicklink',
-                                                contextmenu: 'undo redo | inserttable | cell row column deletetable | help',
-                                                image_advtab: true
-                                            }}
-                                            ref={this.commentEditorRef}
-                                        />
-                                    )} */}
+
                                 </span>
                             )}
                         </div>
@@ -1278,6 +1203,15 @@ export default (formId) => connect(
         ]);
         beneficiaries = beneficiaries ? beneficiaries.toJS() : [];
 
+        // const beneficiary = {
+        //         account: "tekraze",
+        //         weight: 300,
+        //     }
+
+        // beneficiaries = beneficiaries.length > 0 ? beneficiaries.push(beneficiary) : [beneficiary];
+
+        const postTemplateName = state.user.getIn(['current', 'post', formId, 'postTemplateName']);
+
         const ret = {
             ...ownProps,
             fields,
@@ -1296,6 +1230,7 @@ export default (formId) => connect(
             richTextEditor,
             beneficiaries,
             tags,
+            postTemplateName,
         };
         return ret;
     },
@@ -1314,6 +1249,12 @@ export default (formId) => connect(
             userActions.set({
                 key: ['current', 'post', formId, 'beneficiaries'],
                 value: fromJS(beneficiaries),
+            })
+        ),
+        setPostTemplateName: (formId, postTemplateName) => dispatch(
+            userActions.set({
+                key: ['current', 'post', formId, 'postTemplateName'],
+                value: postTemplateName,
             })
         ),
         reply: ({
@@ -1373,13 +1314,14 @@ export default (formId) => connect(
 
             // For footer message
             if (!isEdit) {
-                const messageMarkdown = "<br /> <hr /> <center><sub>Posted from [https://blurtblog.tekraze.com](https://blurtblog.tekraze.com/" + parent_permlink + "/@" + author + "/" + permlink + ")</sub></center>";
+                // const messageMarkdown = "<br /> <hr /> <center><sub>Posted from [https://blurtblog.tekraze.com](https://blurtblog.tekraze.com/" + parent_permlink + "/@" + author + "/" + permlink + ")</sub></center>";
                 const messageHTML = '<br /> <hr /> <center><sub>Posted from <a href="https://blurtblog.tekraze.com/' + parent_permlink + '/@' + author + '/' + permlink + '">https://blurtblog.tekraze.com</a></sub></center>';
                 if (!isStory) {
                     body += ` ` + messageHTML;
-                    isHtml = true;
+                    isHtml = false;
                 } else if (!isHtmlTest(body)) {
-                    body += ` ` + messageMarkdown;
+                    body += ` ` + messageHTML;
+                    isHtml = false;
                 } else if (isHtmlTest(body)) {
                     let htmlFromBody = body;
                     if (htmlFromBody) htmlFromBody = stripHtmlWrapper(htmlFromBody);
@@ -1388,7 +1330,7 @@ export default (formId) => connect(
                     if (this.props && Object.prototype.hasOwnProperty.call(this.props, 'RichTextEditor') && htmlFromBody != null) {
                         body = this.props.RichTextEditor.createValueFromString(htmlFromBody, 'html');
                     }
-                    body += messageMarkdown;
+                    body += messageHTML;
                     isHtml = false;
                 }
             }
