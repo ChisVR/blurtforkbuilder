@@ -1315,7 +1315,19 @@ export default (formId) => connect(
             // For footer message
             if (!isEdit) {
                 // const messageMarkdown = "<br /> <hr /> <center><sub>Posted from [https://blurtblog.tekraze.com](https://blurtblog.tekraze.com/" + parent_permlink + "/@" + author + "/" + permlink + ")</sub></center>";
-                const messageHTML = '<br /> <hr /> <center><sub>Posted from <a href="https://blurtblog.tekraze.com/' + parent_permlink + '/@' + author + '/' + permlink + '">https://blurtblog.tekraze.com</a></sub></center>';
+                let messageHTML = '';
+                if(linkProps.parent_author && linkProps.parent_author.length > 0) {
+                    messageHTML = '<br /> <hr /> <center><sub>Posted from <a href="https://blurtblog.tekraze.com'
+                    + '/' + parent_permlink
+                    + '/@' + linkProps.parent_author + '/' + permlink + '">https://blurtblog.tekraze.com</a></sub></center>';
+                } else {
+                    messageHTML = '<br /> <hr /> <center><sub>Posted from <a href="https://blurtblog.tekraze.com'
+                    // + '/' + parent_permlink
+                    + '/@' + linkProps.author
+                    // + '/' + permlink
+                    + '">https://blurtblog.tekraze.com</a></sub></center>';
+                }
+
                 if (!isStory) {
                     body += ` ` + messageHTML;
                     isHtml = false;
