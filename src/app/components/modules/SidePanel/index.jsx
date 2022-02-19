@@ -55,12 +55,12 @@ const SidePanel = ({
             {
                 value: 'welcome',
                 label: tt('navigation.welcome'),
-                link: 'https://blurtwallet.com/welcome',
+                link: 'https://wallet.blurt.one/welcome',
             },
             {
                 value: 'faq',
                 label: tt('navigation.faq'),
-                link: 'https://blurtwallet.com/faq.html',
+                link: 'https://wallet.blurt.one/faq.html',
             },
             {
                 value: 'tags',

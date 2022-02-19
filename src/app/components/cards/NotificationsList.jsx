@@ -253,7 +253,7 @@ class NotificationsList extends Component {
                         <div className="flex-column">
                             <div className="notification__message">
                                 <a
-                                    href={`https://blurtwallet.com/@${accountName}/transfers`}
+                                    href={`https://wallet.blurt.one/@${accountName}/transfers`}
                                 >
                                     {highlightText(
                                         `${tt(

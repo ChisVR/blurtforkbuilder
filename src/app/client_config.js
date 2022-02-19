@@ -7,8 +7,8 @@ export const APP_NAME_UPPERCASE = 'BLURT';
 export const APP_ICON = 'blurt';
 // FIXME figure out best way to do this on both client and server from env
 // vars. client should read $STM_Config, server should read config package.
-export const APP_URL = 'https://blurtblog.tekraze.com/';
-export const APP_DOMAIN = 'blurtblog.tekraze.com';
+export const APP_URL = 'https://blurt.one/';
+export const APP_DOMAIN = 'blurt.one';
 export const LIQUID_TOKEN = 'Blurt';
 // sometimes it's impossible to use html tags to style coin name, hence usage of _UPPERCASE modifier
 export const LIQUID_TOKEN_UPPERCASE = 'BLURT';
@@ -19,7 +19,7 @@ export const DEBT_TOKEN = 'BLURT DOLLAR';
 export const DEBT_TOKENS = 'BLURT DOLLARS';
 export const CURRENCY_SIGN = '$';
 export const WIKI_URL = ''; // https://wiki.blurt.world/
-export const LANDING_PAGE_URL = 'https://blurtblog.tekraze.com/';
+export const LANDING_PAGE_URL = 'https://blurt.one/';
 export const TERMS_OF_SERVICE_URL = 'https://' + APP_DOMAIN + '/tos.html';
 export const PRIVACY_POLICY_URL = 'https://' + APP_DOMAIN + '/privacy.html';
 export const WHITEPAPER_URL = 'https://blurt.world/WhitePaper.pdf';
@@ -45,4 +45,4 @@ export const SITE_DESCRIPTION = 'Blurt is a social media platform where everyone
 
 // various
 export const SUPPORT_EMAIL = 'info@blurt.foundation';
-export const RECOMMENDED_FOLLOW_ACCOUNT = 'blurt.world';
+export const RECOMMENDED_FOLLOW_ACCOUNT = 'blurt.one';

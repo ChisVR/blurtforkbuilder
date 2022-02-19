@@ -1314,18 +1314,17 @@ export default (formId) => connect(
 
             // For footer message
             if (!isEdit) {
-                // const messageMarkdown = "<br /> <hr /> <center><sub>Posted from [https://blurtblog.tekraze.com](https://blurtblog.tekraze.com/" + parent_permlink + "/@" + author + "/" + permlink + ")</sub></center>";
                 let messageHTML = '';
                 if(linkProps.parent_author && linkProps.parent_author.length > 0) {
-                    messageHTML = '<br /> <hr /> <center><sub>Posted from <a href="https://blurtblog.tekraze.com'
+                    messageHTML = '<br /> <hr /> <center><sub>Posted from <a href="https://blurt.one'
                     + '/' + parent_permlink
-                    + '/@' + linkProps.parent_author + '/' + permlink + '">https://blurtblog.tekraze.com</a></sub></center>';
+                    + '/@' + linkProps.parent_author + '/' + permlink + '">https://blurt.one</a></sub></center>';
                 } else {
-                    messageHTML = '<br /> <hr /> <center><sub>Posted from <a href="https://blurtblog.tekraze.com'
+                    messageHTML = '<br /> <hr /> <center><sub>Posted from <a href="https://blurt.one'
                     // + '/' + parent_permlink
                     + '/@' + linkProps.author
                     // + '/' + permlink
-                    + '">https://blurtblog.tekraze.com</a></sub></center>';
+                    + '">https://blurt.one</a></sub></center>';
                 }
 
                 if (!isStory) {
@@ -1406,7 +1405,7 @@ export default (formId) => connect(
             if (rtags.links.size) meta.links = Array.from(rtags.links);
             else delete meta.links;
 
-            meta.app = 'blurtblog.tekraze/0.1';
+            meta.app = 'blurt.one/0.1';
             if (isStory) {
                 meta.format = isHtml ? 'html' : 'markdown';
                 if (summary) {
