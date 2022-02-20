@@ -77,16 +77,9 @@ class ReplyEditor extends Component {
         super();
         this.state = { progress: {} };
         this.initForm(props);
-        this.postRef = React.createRef();
     }
 
-    componentDidMount() {
-        setTimeout(() => {
-            if (this.props.isStory) this.refs.titleRef.focus();
-            else if (this.postRef.current) this.postRef.current.focus();
-            else if (this.refs.rte) this.refs.rte._focus();
-        }, 300);
-
+    UNSAFE_componentWillMount() {
         const { formId } = this.props;
 
         if (process.env.BROWSER) {
@@ -130,6 +123,14 @@ class ReplyEditor extends Component {
                     : null,
             });
         }
+    }
+
+    componentDidMount() {
+        setTimeout(() => {
+            if (this.props.isStory) this.refs.titleRef.focus();
+            else if (this.refs.postRef) this.refs.postRef.focus();
+            else if (this.refs.rte) this.refs.rte._focus();
+        }, 300);
     }
 
     shouldComponentUpdate = shouldComponentUpdate(this, 'ReplyEditor');
@@ -226,15 +227,14 @@ class ReplyEditor extends Component {
                     summary: summary ? summary.value : undefined,
                 };
 
+                clearTimeout(saveEditorTimeout);
                 saveEditorTimeout = setTimeout(() => {
-                    // console.log('save formId', formId, body.value)
                     localStorage.setItem(
                         'replyEditorData-' + formId,
                         JSON.stringify(data, null, 0)
                     );
                     this.showDraftSaved();
                 }, 500);
-                clearTimeout(saveEditorTimeout);
             }
         }
     }
@@ -401,7 +401,7 @@ class ReplyEditor extends Component {
     insertPlaceHolders = () => {
         let { imagesUploadCount } = this.state;
         const { body } = this.state;
-        const { selectionStart } = this.postRef.current;
+        const { selectionStart } = this.refs.postRef;
         let placeholder = '';
 
         for (let ii = 0; ii < imagesToUpload.length; ii += 1) {
@@ -494,7 +494,7 @@ class ReplyEditor extends Component {
         this.setState({ showEmojiPicker: false });
 
         const { body } = this.state;
-        const { selectionStart } = this.postRef.current;
+        const { selectionStart } = this.refs.postRef;
         const nativeEmoji = data.native;
 
         // Insert the temporary tag where the cursor currently is
@@ -786,7 +786,7 @@ class ReplyEditor extends Component {
                                     {/* <span> */}
                                     <textarea
                                         {...body.props}
-                                        ref={this.postRef}
+                                        ref="postRef"
                                         onPasteCapture={this.onPasteCapture}
                                         className={
                                             type === 'submit_story'
