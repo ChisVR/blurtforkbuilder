@@ -29,7 +29,7 @@ const SidebarLinks = ({ username }) => (
                 <li className="c-sidebar__list-item">
                     <a
                         className="c-sidebar__link"
-                        href={'https://blurtwallet.com/@' + username + ''}
+                        href={'https://wallet.blurt.one/@' + username + ''}
                     >
                         {tt('g.my_wallet')}
                     </a>
