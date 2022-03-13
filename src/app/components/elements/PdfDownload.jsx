@@ -480,7 +480,7 @@ export default class PdfDownload extends Component {
             'This key is used to reset all your other keys. It is ' +
                 'recommended to keep it offline at all times. If your ' +
                 'account is compromised, use this key to recover it ' +
-                'within 30 days at https://wallet.blurt.one.',
+                'within 30 days at https://blurtwallet.com .',
             {
                 scale,
                 x: margin + qrSize + 0.1,

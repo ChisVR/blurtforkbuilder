@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Icon from '../elements/Icon';
 
@@ -24,7 +24,7 @@ class DappsList extends Component {
                                             key={index2 + item.title}
                                         >
                                             <Icon name="blurt" size="5x" />
-                                            <h4>{item.title}</h4>
+                                            <h4 style={{ color: "brown" }}>{item.title}</h4>
                                             <br />
                                             <h5>
                                                 <a
@@ -40,7 +40,7 @@ class DappsList extends Component {
                                             <br />
                                             <a
                                                 href={item.url}
-                                                className="button round"
+                                                className="button round alert"
                                             >
                                                 Visit
                                             </a>

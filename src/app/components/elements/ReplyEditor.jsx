@@ -1316,15 +1316,15 @@ export default (formId) => connect(
             if (!isEdit) {
                 let messageHTML = '';
                 if(linkProps.parent_author && linkProps.parent_author.length > 0) {
-                    messageHTML = '<br /> <hr /> <center><sub>Posted from <a href="https://blurt.one'
+                    messageHTML = '<br /> <hr /> <center><sub>Posted from <a href="https://blurt.buzz'
                     + '/' + parent_permlink
-                    + '/@' + linkProps.parent_author + '/' + permlink + '">https://blurt.one</a></sub></center>';
+                    + '/@' + linkProps.parent_author + '/' + permlink + '">https://blurt.buzz</a></sub></center>';
                 } else {
-                    messageHTML = '<br /> <hr /> <center><sub>Posted from <a href="https://blurt.one'
+                    messageHTML = '<br /> <hr /> <center><sub>Posted from <a href="https://blurt.buzz'
                     // + '/' + parent_permlink
                     + '/@' + linkProps.author
                     // + '/' + permlink
-                    + '">https://blurt.one</a></sub></center>';
+                    + '">https://blurt.buzz</a></sub></center>';
                 }
 
                 if (!isStory) {
@@ -1405,7 +1405,7 @@ export default (formId) => connect(
             if (rtags.links.size) meta.links = Array.from(rtags.links);
             else delete meta.links;
 
-            meta.app = 'blurt.one/0.1';
+            meta.app = 'blurt.buzz/0.1';
             if (isStory) {
                 meta.format = isHtml ? 'html' : 'markdown';
                 if (summary) {

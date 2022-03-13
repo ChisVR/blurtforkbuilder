@@ -1,12 +1,11 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Comment from 'app/components/cards/Comment';
+import Comment, { sortComments } from 'app/components/cards/Comment';
 import PostFull from 'app/components/cards/PostFull';
 import { immutableAccessor } from 'app/utils/Accessors';
 import extractContent from 'app/utils/ExtractContent';
 import { connect } from 'react-redux';
 
-import { sortComments } from 'app/components/cards/Comment';
 import DropdownMenu from 'app/components/elements/DropdownMenu';
 import { Set } from 'immutable';
 import tt from 'counterpart';
@@ -16,16 +15,18 @@ import { INVEST_TOKEN_UPPERCASE } from 'app/client_config';
 import { SIGNUP_URL } from 'shared/constants';
 import GptAd from 'app/components/elements/GptAd';
 import { isLoggedIn } from 'app/utils/UserUtil';
-import AdSense from 'react-adsense';
+import { Adsense } from '@ctrl/react-adsense';
 import Icon from 'app/components/elements/Icon';
 
 class Post extends Component {
+
     static propTypes = {
         content: PropTypes.object.isRequired,
         post: PropTypes.string,
         routeParams: PropTypes.object,
         sortOrder: PropTypes.string,
     };
+
     constructor() {
         super();
         this.state = {
@@ -36,12 +37,13 @@ class Post extends Component {
             window.location = SIGNUP_URL;
         };
     }
+
     componentDidMount() {
         if (!this.props.enabled) {
             return;
         }
 
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        // (window.adsbygoogle = window.adsbygoogle || []).push({});
     }
 
     onHideComment = () => {
@@ -63,7 +65,7 @@ class Post extends Component {
         const { showSignUp } = this;
         const { content, sortOrder } = this.props;
         const { showNegativeComments, commentHidden, showAnyway } = this.state;
-        let post = this.props.post;
+        let {post} = this.props;
         if (!post) {
             const route_params = this.props.routeParams;
             post = route_params.username + '/' + route_params.slug;
@@ -72,51 +74,50 @@ class Post extends Component {
 
         // check if the post doesn't exist
         // !dis may be enough but keep 'created' & 'body' test for potential compatibility
-        const emptyPost =
-            !dis ||
-            (dis.get('created') === '1970-01-01T00:00:00' &&
-                dis.get('body') === '');
+        const emptyPost = !dis
+            || (dis.get('created') === '1970-01-01T00:00:00'
+                && dis.get('body') === '');
 
-        if (emptyPost)
-            return (
-                <div className="NotFound float-center">
-                    <div>
-                        <Icon name="blurt" size="4x" />
-                        <h4 className="NotFound__header">
-                            Sorry! This page doesn't exist.
-                        </h4>
-                        <p>
-                            Not to worry. You can head back to{' '}
-                            <a style={{ fontWeight: 800 }} href="/">
-                                our homepage
-                            </a>
-                            , or check out some great posts.
-                        </p>
-                        <ul className="NotFound__menu">
-                            <li>
-                                <a href="/created">new posts</a>
-                            </li>
-                            <li>
-                                <a href="/hot">hot posts</a>
-                            </li>
-                            <li>
-                                <a href="/trending">trending posts</a>
-                            </li>
-                            <li>
-                                <a href="/promoted">promoted posts</a>
-                            </li>
-                            <li>
-                                <a href="/active">active posts</a>
-                            </li>
-                        </ul>
-                    </div>
+        if (emptyPost) return (
+            <div className="NotFound float-center">
+                <div>
+                    <Icon name="blurt" size="4x" />
+                    <h4 className="NotFound__header">
+                        Sorry! This page doesn't exist.
+                    </h4>
+                    <p>
+                        Not to worry. You can head back to
+                        {' '}
+                        <a style={{ fontWeight: 800 }} href="/">
+                            our homepage
+                        </a>
+                        , or check out some great posts.
+                    </p>
+                    <ul className="NotFound__menu">
+                        <li>
+                            <a href="/created">new posts</a>
+                        </li>
+                        <li>
+                            <a href="/hot">hot posts</a>
+                        </li>
+                        <li>
+                            <a href="/trending">trending posts</a>
+                        </li>
+                        <li>
+                            <a href="/promoted">promoted posts</a>
+                        </li>
+                        <li>
+                            <a href="/active">active posts</a>
+                        </li>
+                    </ul>
                 </div>
+            </div>
             );
 
         // TODO: This data model needs some help.
         const post_content = content.get(post);
         const p = extractContent(immutableAccessor, post_content);
-        const tags = p.json_metadata.tags;
+        const {tags} = p.json_metadata;
 
         // A post should be hidden if it is not special, is not told to "show
         // anyway", and is designated "gray".
@@ -133,7 +134,8 @@ class Post extends Component {
                                         {tt(
                                             'promote_post_jsx.this_post_was_hidden_due_to_low_ratings'
                                         )}
-                                        .{' '}
+                                        .
+                                        {' '}
                                         <button
                                             style={{ marginBottom: 0 }}
                                             className="button hollow tiny float-right"
@@ -162,10 +164,9 @@ class Post extends Component {
         let commentCount = 0;
         const positiveComments = replies.map((reply) => {
             commentCount++;
-            const showAd =
-                commentCount % 5 == 0 &&
-                commentCount != replies.length &&
-                commentCount != commentLimit;
+            const showAd = commentCount % 5 == 0
+                && commentCount != replies.length
+                && commentCount != commentLimit;
 
             return (
                 <div key={post + reply}>
@@ -197,9 +198,10 @@ class Post extends Component {
                     {showNegativeComments
                         ? tt('post_jsx.now_showing_comments_with_low_ratings')
                         : tt(
-                              'post_jsx.comments_were_hidden_due_to_low_ratings'
-                          )}
-                    .{' '}
+                            'post_jsx.comments_were_hidden_due_to_low_ratings'
+                        )}
+                    .
+                    {' '}
                     <button
                         className="button hollow tiny float-right"
                         onClick={(e) => this.toggleNegativeReplies(e)}
@@ -264,7 +266,8 @@ class Post extends Component {
                         <div className="Post_comments__content">
                             {positiveComments.length ? (
                                 <div className="Post__comments_sort_order float-right">
-                                    {tt('post_jsx.sort_order')}: &nbsp;
+                                    {tt('post_jsx.sort_order')}
+                                    : &nbsp;
                                     <DropdownMenu
                                         items={sort_menu}
                                         el="li"
@@ -289,7 +292,7 @@ class Post extends Component {
                     </div>
                 ) : null}
                 {this.props.enabled && positiveComments.length ? (
-                    <AdSense.Google
+                    <Adsense
                         client="ca-pub-8228818602519714"
                         slot="1435928495"
                         style={{ display: 'block' }}
@@ -306,8 +309,8 @@ export default connect((state, ownProps) => {
     return {
         content: state.global.get('content'),
         sortOrder:
-            ownProps.router.getCurrentLocation().query.sort ||
-            state.app.getIn(
+            ownProps.router.getCurrentLocation().query.sort
+            || state.app.getIn(
                 ['user_preferences', 'defaultCommentsSortOrder'],
                 'new'
             ),

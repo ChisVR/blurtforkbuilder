@@ -32,7 +32,7 @@ try {
 
 // UA-125809453-3 Tekraze
 // UA-179023138-1
-ReactGA.initialize('UA-125809453-3', {
+ReactGA.initialize('UA-179023138-1', {
     titleCase: false,
     gaOptions: {
         siteSpeedSampleRate: 100

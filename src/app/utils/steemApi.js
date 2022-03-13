@@ -53,7 +53,7 @@ export async function getStateAsync(url) {
         });
 
     await axios
-        .get('https://blurt-coal.tekraze.com', {
+        .get('https://coal.blurtwallet.com', {
             timeout: 3000,
             headers: {
                 'Access-Control-Allow-Origin': '*'
@@ -73,16 +73,38 @@ export async function getStateAsync(url) {
             console.warn(error);
         });
 
-    await fetch(
-        'https://gitlab.com/blurt/openblurt/condenser-pinned/-/raw/master/dapps.json'
-    )
-        .then((response) => response.json())
-        .then((data) => {
-            if (data) raw.dapps = data;
+    await axios
+        .get('https://gitlab.com/blurt/openblurt/condenser-pinned/-/raw/master/dapps.json', {
+            timeout: 3000,
+            headers: {
+                'Access-Control-Allow-Origin': '*'
+            }
         })
-        .catch((err) => {
-            console.warn('Cors Blocked for DApps', err);
+        .then((response) => {
+            // const map = new Map();
+            if (response.status === 200) {
+                // eslint-disable-next-line no-restricted-syntax
+                // for (const data of response.data) {
+                //     map.set(data.name, data);
+                // }
+                // raw.blacklist = map;
+                raw.dapps = response.data;
+            }
+        })
+        .catch((error) => {
+            console.warn(error);
         });
+
+    // await fetch(
+    //     'https://gitlab.com/blurt/openblurt/condenser-pinned/-/raw/master/dapps.json'
+    // )
+    //     .then((response) => response.json())
+    //     .then((data) => {
+    //         if (data) raw.dapps = data;
+    //     })
+    //     .catch((err) => {
+    //         console.warn('Cors Blocked for DApps', err);
+    //     });
 
     const rewardFund = await getRewardFund();
     if (rewardFund) {

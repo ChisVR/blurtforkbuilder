@@ -9,15 +9,17 @@ import {
     Signature,
     hash,
 } from '@blurtfoundation/blurtjs/lib/auth/ecc';
-import { api, broadcast } from '@blurtfoundation/blurtjs';
+import { api } from '@blurtfoundation/blurtjs';
 
-import app from '../server';
+// import app from '../server';
 
 const ACCEPTED_TOS_TAG = 'accepted_tos_20180614';
-const tokenCSRF = require('csrf')(app);
+// const tokenCSRF = require('csrf')(app);
 
-const _stringval = (v) => (typeof v === 'string' ? v : JSON.stringify(v));
-const _parse = (params) => {
+const stringval = (v) => {
+    return (typeof v === 'string' ? v : JSON.stringify(v));
+};
+const parse = (params) => {
     if (typeof params === 'string') {
         try {
             return JSON.parse(params);
@@ -50,7 +52,7 @@ function logRequest(path, ctx, extra) {
         });
     }
     const info = Object.keys(d)
-        .map((k) => `${k}=${_stringval(d[k])}`)
+        .map((k) => `${k}=${stringval(d[k])}`)
         .join(' ');
     console.log(`-- /${path} --> ${info}`);
 }
@@ -64,7 +66,7 @@ export default function useGeneralApi(app) {
         // if (rateLimitReq(this, this.req)) return;
         const params = this.request.body;
         const { csrf, account, signatures } =
-            typeof params === 'string' ? _parse(params) : params;
+            typeof params === 'string' ? parse(params) : params;
         if (!checkCSRF(this, csrf)) return;
 
         logRequest('login_account', this, { account });
@@ -242,7 +244,7 @@ export default function useGeneralApi(app) {
 
     router.post('/isTosAccepted', koaBody, function* () {
         const params = this.request.body;
-        const { csrf } = _parse(params);
+        const { csrf } = parse(params);
         if (!checkCSRF(this, csrf)) return;
 
         this.body = '{}';

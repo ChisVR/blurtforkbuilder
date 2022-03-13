@@ -1,20 +1,12 @@
+/* eslint-disable import/no-import-module-exports */
 import path from 'path';
 import Koa from 'koa';
 import mount from 'koa-mount';
 import koa_logger from 'koa-logger';
-import requestTime from './requesttimings';
-import StatsLoggerClient from './utils/StatsLoggerClient';
-import { SteemMarket } from './utils/SteemMarket';
-import hardwareStats from './hardwarestats';
 import cluster from 'cluster';
 import os from 'os';
-import prod_logger from './prod_logger';
 import favicon from 'koa-favicon';
 import staticCache from 'koa-static-cache';
-import useRedirects from './redirects';
-import useGeneralApi from './api/general';
-import useUserJson from './json/user_json';
-import usePostJson from './json/post_json';
 import isBot from 'koa-isbot';
 // import encryptedSession from 'koa-encrypted-session';
 // koa-encrypted session not work
@@ -26,13 +18,22 @@ import { routeRegex } from 'app/ResolveRoute';
 import secureRandom from 'secure-random';
 import userIllegalContent from 'app/utils/userIllegalContent';
 import koaLocale from 'koa-locale';
+import fs from 'fs';
 import { getSupportedLocales } from './utils/misc';
 import { specialPosts } from './utils/SpecialPosts';
-import fs from 'fs';
+import usePostJson from './json/post_json';
+import useUserJson from './json/user_json';
+import useGeneralApi from './api/general';
+import prod_logger from './prod_logger';
+import hardwareStats from './hardwarestats';
+import { SteemMarket } from './utils/SteemMarket';
+import StatsLoggerClient from './utils/StatsLoggerClient';
+import requestTime from './requesttimings';
+import useRedirects from './redirects';
 
 // const session = require('koa-session');
 
-if (cluster.isMaster) console.log('application server starting, please wait.');
+if (cluster.isPrimary) console.log('application server starting, please wait.');
 
 // import uploadImage from 'server/upload-image' //medium-editor
 
@@ -180,10 +181,10 @@ app.use(function* (next) {
     }
     // normalize user name url from cased params
     if (
-        this.method === 'GET' &&
-        (routeRegex.UserProfile1.test(this.url) ||
-            routeRegex.PostNoCategory.test(this.url) ||
-            routeRegex.Post.test(this.url))
+        this.method === 'GET'
+        && (routeRegex.UserProfile1.test(this.url)
+            || routeRegex.PostNoCategory.test(this.url)
+            || routeRegex.Post.test(this.url))
     ) {
         const p = this.originalUrl.toLowerCase();
         let userCheck = '';
@@ -261,7 +262,7 @@ app.use(
 // set user's uid - used to identify users in logs and some other places
 // FIXME SECURITY PRIVACY cycle this uid after a period of time
 app.use(function* (next) {
-    const last_visit = this.session.last_visit;
+    const {last_visit} = this.session;
     this.session.last_visit = (new Date().getTime() / 1000) | 0;
     const from_link = this.request.headers.referer;
     if (!this.session.uid) {
@@ -291,8 +292,8 @@ if (env !== 'test') {
     // so `src/server/app_render.jsx` can `await` on it.
     app.specialPostsPromise = specialPosts();
     // refresh special posts every five minutes
-    setInterval(function () {
-        return new Promise(function (resolve, reject) {
+    setInterval(() => {
+        return new Promise((resolve, reject) => {
             app.specialPostsPromise = specialPosts();
             resolve();
         });
@@ -318,7 +319,7 @@ if (env !== 'test') {
                 cluster.fork();
             }
             // if a worker dies replace it so application keeps running
-            cluster.on('exit', function (worker) {
+            cluster.on('exit', (worker) => {
                 console.log(
                     'error: worker %d died, starting a new one',
                     worker.id

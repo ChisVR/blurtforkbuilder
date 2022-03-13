@@ -1,55 +1,51 @@
 import * as config from 'config';
-import * as https from 'https';
 import * as blurtjs from '@blurtfoundation/blurtjs';
+import { Http } from 'node-https';
+
 /**
  * Load special posts - including notices,contests, featured, and promoted.
  *
  * @returns {promise} resolves to object of {featured_posts:[], promoted_posts:[], notices:[], contests: []}
  */
-function loadSpecialPosts() {
-    return new Promise((resolve, reject) => {
-        const emptySpecialPosts = {
-            featured_posts: [],
-            promoted_posts: [],
-            notices: [],
-            contests: [],
-        };
+async function loadSpecialPosts() {
+    const emptySpecialPosts = {
+        featured_posts: [],
+        promoted_posts: [],
+        notices: [],
+        contests: [],
+    };
 
-        if (!config.special_posts_url) {
-            resolve(emptySpecialPosts);
-            return;
+    if(!config.special_posts_url) {
+        return emptySpecialPosts;
+    }
+
+    try {
+        const http = new Http();
+        const postsResult = await http.get(config.special_posts_url);
+        if(postsResult.data) {
+            return postsResult.data;
         }
-
-        const request = https.get(config.special_posts_url, (resp) => {
-            let data = '';
-            resp.on('data', (chunk) => {
-                data += chunk;
-            });
-            resp.on('end', () => {
-                const json = JSON.parse(data);
-                console.info('Received special posts payload', json);
-                if (json === Object(json)) {
-                    resolve(json);
-                }
-            });
-        });
-
-        request.on('error', (e) => {
-            console.error('Could not load special posts', e);
-            resolve(emptySpecialPosts);
-        });
-    });
+        console.error('Could not load special posts', postsResult.data);
+        return emptySpecialPosts;
+    } catch(e) {
+        console.error('Could not load special posts', e);
+        return emptySpecialPosts;
+    }
 }
+
 /**
  * [async] Get special posts - including notices, featured, and promoted.
  *
  * @returns {object} object of {featured_posts:[], promoted_posts:[], notices:[]}
  */
+// eslint-disable-next-line import/prefer-default-export
 export async function specialPosts() {
     console.info('Loading special posts');
 
     const postData = await loadSpecialPosts();
-    console.info('Loading special posts', postData);
+
+    console.log('Post data', postData);
+
     const loadedPostData = {
         featured_posts: [],
         promoted_posts: [],
@@ -57,42 +53,44 @@ export async function specialPosts() {
         contests: [],
     };
 
-    for (const url of postData.featured_posts) {
+    postData.featured_posts.forEach(async (url) => {
         const [username, postId] = url.split('@')[1].split('/');
         const post = await blurtjs.api.getContentAsync(username, postId);
         post.special = true;
         loadedPostData.featured_posts.push(post);
-    }
+    });
 
-    for (const url of postData.promoted_posts) {
+    postData.promoted_posts.forEach(async (url) => {
         const [username, postId] = url.split('@')[1].split('/');
         const post = await blurtjs.api.getContentAsync(username, postId);
         post.special = true;
         loadedPostData.promoted_posts.push(post);
-    }
+    });
 
-    for (const notice of postData.notices) {
+    postData.notices.forEach(async (notice) => {
         if (notice.permalink) {
             const [username, postId] = notice.permalink
                 .split('@')[1]
                 .split('/');
             const post = await blurtjs.api.getContentAsync(username, postId);
-            loadedPostData.notices.push(Object.assign({}, notice, post));
+            loadedPostData.notices.push({ ...notice, ...post });
         } else {
             loadedPostData.notices.push(notice);
         }
-    }
+    });
 
-    for (const contest of postData.contests) {
-        if (contest.permalink) {
-            const [username, postId] = contest.permalink
-                .split('@')[1]
-                .split('/');
-            const post = await blurtjs.api.getContentAsync(username, postId);
-            loadedPostData.contests.push(Object.assign({}, contest, post));
-        } else {
-            loadedPostData.contests.push(contest);
-        }
+    if (postData.contests) {
+        postData.contests.forEach(async (contest) => {
+            if (contest.permalink) {
+                const [username, postId] = contest.permalink
+                    .split('@')[1]
+                    .split('/');
+                const post = await blurtjs.api.getContentAsync(username, postId);
+                loadedPostData.contests.push({ ...contest, ...post });
+            } else {
+                loadedPostData.contests.push(contest);
+            }
+        });
     }
 
     console.info(

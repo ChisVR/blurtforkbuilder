@@ -24,7 +24,7 @@ const SidebarNewUsers = () => (
                 <li className="c-sidebar__list-item">
                     <a
                         className="c-sidebar__link"
-                        href="https://wallet.blurt.one/~witnesses"
+                        href="https://blurtwallet.com/~witnesses"
                     >
                         Vote for Witnesses
                     </a>
@@ -32,7 +32,7 @@ const SidebarNewUsers = () => (
                 <li className="c-sidebar__list-item">
                     <a
                         className="c-sidebar__link"
-                        href="https://wallet.blurt.one/proposals"
+                        href="https://blurtwallet.com/proposals"
                     >
                         Blurt Proposals
                     </a>

@@ -19,10 +19,7 @@ export default function ServerHTML({
     return (
         <html lang="en">
             <head>
-                <script
-                    async
-                    src="https://www.googletagmanager.com/gtag/js?id=G-63ZBEY1EVG"
-                />
+                <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" />
                 <script content="window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-63ZBEY1EVG');" />
                 <meta charSet="utf-8" />
                 <meta

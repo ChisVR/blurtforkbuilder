@@ -415,8 +415,8 @@ function* usernamePasswordLogin2({
                         username,
                         buf,
                         'Posting',
-                        (response) => {
-                            resolve(response);
+                        (responseSign) => {
+                            resolve(responseSign);
                         }
                     );
                 });
@@ -485,6 +485,9 @@ function* usernamePasswordLogin2({
     } else if (feedURL && document.location.pathname === '/') {
         console.log('Redirecting to feed page', feedURL);
         browserHistory.push(feedURL);
+    } else {
+        // Temporary Refresh Fix
+        window.location.reload();
     }
 }
 
@@ -566,6 +569,9 @@ function* logout(action) {
     }
 
     yield serverApiLogout();
+
+    // Temporary Refresh Fix
+    window.location.reload();
 }
 
 function* loginError({
