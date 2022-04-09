@@ -64,6 +64,16 @@ import {
     preprocessHtml as preprocessTwitterHtml,
 } from 'app/components/elements/EmbeddedPlayers/twitter';
 
+import {
+    genIframeMd as genAnchorFMIframeMd,
+    validateIframeUrl as validateAnchorFMIframeUrl,
+    normalizeEmbedUrl as normalizeAnchorFMEmbedUrl,
+    embedNode as embedAnchorFmNode,
+    sandboxConfig as sandboxConfigAnchorFM,
+} from 'app/components/elements/EmbeddedPlayers/anchorfm2';
+
+// import { genAnchorFmIframeMd, validateAnchorFmIframeUrl } from './anchorfm';
+
 const supportedProviders = [
     {
         id: 'dtube',
@@ -89,6 +99,14 @@ const supportedProviders = [
         genIframeMdFn: null,
         ...sandboxConfigSoundcloud,
     },
+    {
+        id: 'anchorfm',
+        validateIframeUrlFn: validateAnchorFMIframeUrl,
+        normalizeEmbedUrlFn: null,
+        embedNodeFn: embedAnchorFmNode,
+        genIframeMdFn: genAnchorFMIframeMd,
+        ...sandboxConfigAnchorFM,
+       },
     {
         id: 'youtube',
         validateIframeUrlFn: validateYoutubeIframeUrl,
@@ -144,6 +162,9 @@ export function validateIframeUrl(url) {
     for (let pi = 0; pi < supportedProviders.length; pi += 1) {
         const provider = supportedProviders[pi];
         const validUrl = provider.validateIframeUrlFn(url);
+
+        console.log('Provider', provider);
+        console.log('valid url', validUrl)
 
         if (validUrl !== false) {
             console.log(`Found a valid ${provider.id} iframe URL`);
