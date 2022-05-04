@@ -24,7 +24,7 @@ import sanitizeConfig, { allowedTags } from 'app/utils/SanitizeConfig';
 import sanitize from 'sanitize-html';
 import HtmlReady from 'shared/HtmlReady';
 import { connect } from 'react-redux';
-import { fromJS, Set } from 'immutable';
+import { fromJS, OrderedSet } from 'immutable';
 import { Remarkable } from 'remarkable';
 import Dropzone from 'react-dropzone';
 import tt from 'counterpart';
@@ -34,6 +34,7 @@ import { Picker, Emoji } from 'emoji-mart';
 import { loadUserTemplates, saveUserTemplates } from 'app/utils/UserTemplates';
 
 const MAX_FILE_TO_UPLOAD = 10;
+const MAX_TAGS=10;
 const imagesToUpload = [];
 
 const remarkable = new Remarkable({ html: true, breaks: true });
@@ -1169,14 +1170,17 @@ export default (formId) => connect(
             fields.push('summary');
         }
 
-        const { summary } = ownProps;
-        let { category, title, body } = ownProps;
+        let { category, title, body, summary } = ownProps;
         if (/submit_/.test(type)) {
             title = '';
             body = '';
         }
         if (isStory && jsonMetadata && jsonMetadata.tags) {
-            category = Set([category, ...jsonMetadata.tags]).join(' ');
+            category = OrderedSet([category, ...jsonMetadata.tags]).join(' ');
+        }
+
+        if (isStory && jsonMetadata && jsonMetadata.description) {
+            summary = jsonMetadata.description;
         }
 
         const defaultPayoutType = state.app.getIn(
@@ -1366,7 +1370,7 @@ export default (formId) => connect(
                 return;
             }
 
-            const formCategories = Set(
+            const formCategories = OrderedSet(
                 category
                     ? category.trim().replace(/#/g, '').split(/ +/)
                     : []
@@ -1374,11 +1378,11 @@ export default (formId) => connect(
             const rootCategory = originalPost && originalPost.category
                 ? originalPost.category
                 : formCategories.first();
-            let allCategories = Set([...formCategories.toJS()]);
+            let allCategories = OrderedSet([...formCategories.toJS()]);
             if (/^[-a-z\d]+$/.test(rootCategory)) allCategories = allCategories.add(rootCategory);
 
             const postHashtags = [...rtags.hashtags];
-            while (allCategories.size < 10 && postHashtags.length > 0) {
+            while (allCategories.size < MAX_TAGS && postHashtags.length > 0) {
                 allCategories = allCategories.add(postHashtags.shift());
             }
 
@@ -1421,7 +1425,7 @@ export default (formId) => connect(
                 return;
             }
 
-            if (meta.tags.length > 10) {
+            if (meta.tags.length > MAX_TAGS) {
                 const includingCategory = isEdit
                     ? tt('reply_editor.including_the_category', {
                         rootCategory,
