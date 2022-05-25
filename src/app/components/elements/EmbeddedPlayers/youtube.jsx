@@ -1,18 +1,34 @@
-import YoutubePreview from 'app/components/elements/YoutubePreview';
+import React from 'react';
 
+/**
+ * Regular expressions for detecting and validating provider URLs
+ * @type {{htmlReplacement: RegExp, main: RegExp, sanitize: RegExp}}
+ */
 const regex = {
-    sanitize: /^(https?:)?\/\/www.youtube.com\/embed\/.*/i,
-    main: /(?:https?:\/\/)(?:www\.)?(?:(?:youtube\.com\/watch\?v=)|(?:youtu.be\/)|(?:youtube\.com\/embed\/))([A-Za-z0-9_\-]+)[^ ]*/i,
-    contentId: /(?:(?:youtube\.com\/watch\?v=)|(?:youtu.be\/)|(?:youtube\.com\/embed\/))([A-Za-z0-9_\-]+)/i,
+    sanitize: /^(https?:)?\/\/www\.youtube\.com\/(embed|shorts)\/.*/i,
+    //main: new RegExp(urlSet({ domain: '(?:(?:.*.)?youtube.com|youtu.be)' }), flags),
+    // eslint-disable-next-line no-useless-escape
+    main: /(?:https?:\/\/)(?:www\.)?(?:(?:youtube\.com\/watch\?v=)|(?:youtu.be\/)|(?:youtube\.com\/(embed|shorts)\/))([A-Za-z0-9_\-]+)[^ ]*/i,
+    // eslint-disable-next-line no-useless-escape
+    contentId: /(?:(?:youtube\.com\/watch\?v=)|(?:youtu.be\/)|(?:youtube\.com\/(embed|shorts)\/))([A-Za-z0-9_\-]+)/i,
 };
-
 export default regex;
+
+/**
+ * Configuration for HTML iframe's `sandbox` attribute
+ * @type {useSandbox: boolean, sandboxAttributes: string[]}
+ */
 export const sandboxConfig = {
     useSandbox: false,
     sandboxAttributes: [],
 };
 
-// <iframe width="560" height="315" src="https://www.youtube.com/embed/KOnk7Nbqkhs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+/**
+ * Check if the iframe code in the post editor is to an allowed URL
+ * <iframe width="560" height="315" src="https://www.youtube.com/embed/KOnk7Nbqkhs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+ * @param url
+ * @returns {boolean|*}
+ */
 export function validateIframeUrl(url) {
     const match = url.match(regex.sanitize);
 
@@ -24,6 +40,11 @@ export function validateIframeUrl(url) {
     return false;
 }
 
+/**
+ * Rewrites the embedded URL to a normalized format
+ * @param url
+ * @returns {string|boolean}
+ */
 export function normalizeEmbedUrl(url) {
     const match = url.match(regex.contentId);
 
@@ -34,6 +55,11 @@ export function normalizeEmbedUrl(url) {
     return false;
 }
 
+/**
+ * Extract the content ID and other metadata from the URL
+ * @param data
+ * @returns {null|{id: *, canonical: string, url: *}}
+ */
 export function extractMetadata(data) {
     if (!data) return null;
 
@@ -43,12 +69,11 @@ export function extractMetadata(data) {
     if (!url) return null;
 
     const m2 = url.match(regex.contentId);
-    const id = m2 && m2.length >= 2 ? m2[1] : null;
+    const id = m2 && m2.length >= 2 ? m2[2] : null;
 
     if (!id) return null;
 
     const startTime = url.match(/t=(\d+)s?/);
-
     return {
         id,
         url,
@@ -58,6 +83,12 @@ export function extractMetadata(data) {
     };
 }
 
+/**
+ * Replaces the URL with a custom Markdown for embedded players
+ * @param child
+ * @param links
+ * @returns {*}
+ */
 export function embedNode(child, links, images) {
     try {
         const yt = extractMetadata(child.data);
@@ -65,15 +96,9 @@ export function embedNode(child, links, images) {
         if (!yt) return child;
 
         if (yt.startTime) {
-            child.data = child.data.replace(
-                yt.url,
-                `~~~ embed:${yt.id} youtube ${yt.startTime} ~~~`
-            );
+            child.data = child.data.replace(yt.url, `~~~ embed:${yt.id} youtube ${yt.startTime} ~~~`);
         } else {
-            child.data = child.data.replace(
-                yt.url,
-                `~~~ embed:${yt.id} youtube ~~~`
-            );
+            child.data = child.data.replace(yt.url, `~~~ embed:${yt.id} youtube ~~~`);
         }
 
         if (links) links.add(yt.url);
@@ -85,16 +110,54 @@ export function embedNode(child, links, images) {
     return child;
 }
 
-export function genIframeMd(idx, id, w, h, startTime) {
+/**
+ * Generates the Markdown/HTML code to override the detected URL with an iFrame
+ * @param idx
+ * @param id
+ * @param width
+ * @param height
+ * @param startTime
+ * @returns {*}
+ */
+export function genIframeMd(idx, id, width, height, startTime = 0) {
+    const url = `https://www.youtube.com/embed/${id}?enablejsapi=0&rel=0&origin=https://blurt.alloyxuast.tk&start=${startTime}`;
+
+    let sandbox = sandboxConfig.useSandbox;
+    if (sandbox) {
+        if (Object.prototype.hasOwnProperty.call(sandboxConfig, 'sandboxAttributes')) {
+            sandbox = sandboxConfig.sandboxAttributes.join(' ');
+        }
+    }
+    const aspectRatioPercent = (height / width) * 100;
+    const iframeProps = {
+        src: url,
+        width,
+        height,
+        frameBorder: '0',
+        webkitallowfullscreen: 'webkitallowfullscreen',
+        mozallowfullscreen: 'mozallowfullscreen',
+        allowFullScreen: 'allowFullScreen',
+    };
+    if (sandbox) {
+        iframeProps.sandbox = sandbox;
+    }
+
     return (
-        <YoutubePreview
+        <div
             key={`youtube-${id}-${idx}`}
-            width={w}
-            height={h}
-            youTubeId={id}
-            startTime={startTime}
-            frameBorder="0"
-            allowFullScreen="true"
-        />
+            className="videoWrapper"
+            style={{
+                position: 'relative',
+                width: '100%',
+                height: 0,
+                paddingBottom: `${aspectRatioPercent}%`,
+            }}
+        >
+            <iframe
+                title="Youtube embedded player"
+                // eslint-disable-next-line react/jsx-props-no-spreading
+                {...iframeProps}
+            />
+        </div>
     );
 }
