@@ -23,6 +23,15 @@ export const sandboxConfig = {
     sandboxAttributes: [],
 };
 
+function getParentDomain() {
+    let parentDomain = $STM_Config.site_domain;
+    if (typeof window !== 'undefined') {
+        parentDomain = window.location.hostname;
+    }
+
+    return parentDomain;
+}
+
 /**
  * Check if the iframe code in the post editor is to an allowed URL
  * <iframe width="560" height="315" src="https://www.youtube.com/embed/KOnk7Nbqkhs" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -120,7 +129,7 @@ export function embedNode(child, links, images) {
  * @returns {*}
  */
 export function genIframeMd(idx, id, width, height, startTime = 0) {
-    const url = `https://www.youtube.com/embed/${id}?enablejsapi=0&rel=0&origin=https://blurt.alloyxuast.tk&start=${startTime}`;
+    const url = `https://www.youtube.com/embed/${id}?enablejsapi=0&rel=0&origin=https://${getParentDomain()}&start=${startTime}`;
 
     let sandbox = sandboxConfig.useSandbox;
     if (sandbox) {
